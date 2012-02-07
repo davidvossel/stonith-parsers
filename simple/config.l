@@ -104,12 +104,3 @@ yywrap(void)
 	return 1;
 }
 
-
-#ifdef STANDALONE
-int
-main(int argc, char *argv[])
-{
-	yyparse();
-	return 0;
-}
-#endif

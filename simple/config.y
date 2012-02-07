@@ -24,7 +24,8 @@ static struct {
 	char *agent;
 	char *keys[STANDALONE_CFG_MAX_KEYVALS];
 	char *vals[STANDALONE_CFG_MAX_KEYVALS];
-	char val_count;
+	int val_count;
+	unsigned int priority;
 } line_val = { 0, };
 
 %}
@@ -72,8 +73,9 @@ optline:
 	;
 
 prioline:
-	T_PRIO T_VAL vals T_ENDL {
+	T_PRIO T_VAL T_VAL vals T_ENDL {
 		line_val.name = $2;
+		line_val.priority = atoi($3);
 		line_val.type = STANDALONE_LINE_PRIORITY;
 		handle_line_value();
 	}
@@ -184,9 +186,9 @@ handle_line_value(void)
 		break;
 	case STANDALONE_LINE_PRIORITY:
 		for (i = 0; i < line_val.val_count; i++) {
-			standalone_cfg_add_node_priority(line_val.name, 
-				line_val.keys[i],
-				atoi(line_val.vals[i]));
+			standalone_cfg_add_node_priority(line_val.name,
+				line_val.vals[i], /* fence device name */
+				line_val.priority);
 		}
 		break;
 	case STANDALONE_LINE_PORT:
@@ -200,3 +202,12 @@ handle_line_value(void)
 	reset_line_value();
 }
 
+
+#ifdef STANDALONE
+int
+main(int argc, char *argv[])
+{
+	yyparse();
+	return 0;
+}
+#endif
