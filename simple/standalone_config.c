@@ -99,7 +99,7 @@ int standalone_cfg_add_device(const char *device, const char *agent)
 	if (find_device(device)) {
 		return 0;
 	}
-//	crm_malloc0(dev, sizeof(*dev));
+	/* TODO use crm_malloc0(dev, sizeof(*dev)); */
 
 	if (!(dev = calloc(1, sizeof(*dev)))) {
 		return -1;
@@ -129,7 +129,7 @@ int standalone_cfg_add_device_options(const char *device, const char *key, const
 
 int standalone_cfg_add_node(const char *node, const char *device, const char *ports)
 {
-	// TODO
+	/* TODO implement this with crm_concat */
 	return 0;
 }
 
@@ -141,7 +141,7 @@ int standalone_cfg_add_node_priority(const char *node, const char *device, unsig
 
 	if ((topo = find_topology(node))) {
 		new = 0;
-//	crm_malloc0(topo, sizeof(*topo));
+	/* TODO use crm_malloc0(topo, sizeof(*topo)); */
 	} else if ((topo = calloc(1, sizeof(*topo)))) {
 		topo->node_name = strdup(node);
 	} else {
@@ -159,8 +159,46 @@ int standalone_cfg_add_node_priority(const char *node, const char *device, unsig
 	return 0;
 }
 
-static int destroy_devices(struct device *dev)
+static int destroy_topology()
 {
+	struct topology *topo = NULL;
+	int i;
+
+	while (topology_list) {
+		/* TODO use crm free */
+		topo = topology_list;
+
+		free(topo->node_name);
+		for (i = 0; i < topo->priority_levels_count; i++) {
+			free(topo->priority_levels[i].device_name);
+		}
+
+		topology_list = topo->next;
+		free(topo);
+	}
+
+}
+
+static int destroy_devices()
+{
+	struct device *dev = NULL;
+	int i;
+
+	while (device_list) {
+		dev = device_list;
+
+		/* TODO use crm free */
+		free(dev->name);
+		free(dev->agent);
+		free(dev->hostlist);
+		free(dev->hostmap);
+		for (i = 0; i < dev->key_vals_count; i++) {
+			free(dev->key_vals[i].key);
+			free(dev->key_vals[i].val);
+		}
+		device_list = dev->next;
+		free(dev);
+	}
 
 	return 0;
 }
@@ -198,5 +236,7 @@ int standalone_cfg_commit(void)
 		printf("\n");
 	}
 
+	destroy_devices();
+	destroy_topology();
 	return 0;
 }
