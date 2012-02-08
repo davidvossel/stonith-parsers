@@ -24,6 +24,18 @@
 #define STANDALONE_CFG_MAX_KEYVALS 100
 
 /*!
+ * \brief Attempts to open a stonith standalone config file
+ * and load the config internally.
+ *
+ * \note standalone_cfg_commit() must be executed before
+ * the config will be activated.
+ *
+ * \retval 0, success
+ * \retval -1, failure
+ */
+int standalone_cfg_read_file(const char *file_path);
+
+/*!
  * \brief Add a fencing device to the standalone config
  *
  * \param device, Name of the fencing device to be created.

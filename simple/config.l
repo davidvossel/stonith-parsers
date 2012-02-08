@@ -104,3 +104,17 @@ yywrap(void)
 	return 1;
 }
 
+int standalone_cfg_read_file(const char *file_path)
+{
+	FILE *fp = fopen(file_path, "r");
+
+	if (!fp) {
+		return -1;
+	}
+	yyin = fp;
+	yyparse();
+
+	fclose(fp);
+	return 0;
+}
+

@@ -9,7 +9,8 @@
 extern int yylex (void);
 int yyerror(const char *foo);
 static void handle_line_value(void);
-static void reset_line_value();
+static void reset_line();
+static void add_line_value(char *key, char *val);
 
 enum line_type {
 	STANDALONE_LINE_DEVICE = 0,
@@ -89,35 +90,25 @@ portline:
 	}
 	;
 
-vals:
-	T_VAL vals |
+val:
 	T_VAL {
-		if (line_val.val_count < STANDALONE_CFG_MAX_KEYVALS) {
-			line_val.vals[line_val.val_count] = $1;
-			line_val.val_count++;
-		}
+		add_line_value(NULL, $1);
 	}
 	;
 
+vals:
+	vals val |
+	val
+	;
+
 portinfo:
-	assign portinfo |
-	T_VAL portinfo |
-	assign |
-	T_VAL {
-		if (line_val.val_count < STANDALONE_CFG_MAX_KEYVALS) {
-			line_val.vals[line_val.val_count] = $1;
-			line_val.val_count++;
-		}
-	}
+	assigns |
+	vals
 	;
 
 assign:
 	T_VAL T_EQ T_VAL {
-		if (line_val.val_count < STANDALONE_CFG_MAX_KEYVALS) {
-			line_val.vals[line_val.val_count] = $3;
-			line_val.keys[line_val.val_count] = $1;
-			line_val.val_count++;
-		}
+		add_line_value($1, $3);
 	}
 	;
 
@@ -153,7 +144,17 @@ yyerror(const char *foo)
 }
 
 static void
-reset_line_value()
+add_line_value(char *key, char *val)
+{
+	if (line_val.val_count < STANDALONE_CFG_MAX_KEYVALS) {
+		line_val.keys[line_val.val_count] = key;
+		line_val.vals[line_val.val_count] = val;
+		line_val.val_count++;
+	}
+}
+
+static void
+reset_line()
 {
 	int i;
 	free(line_val.name);
@@ -199,15 +200,17 @@ handle_line_value(void)
 		}
 		break;
 	}
-	reset_line_value();
+	reset_line();
 }
-
 
 #ifdef STANDALONE
 int
 main(int argc, char *argv[])
 {
-	yyparse();
+	if (standalone_cfg_read_file("test2.conf")) {
+		return -1;
+	}
+	standalone_cfg_commit();
 	return 0;
 }
 #endif
